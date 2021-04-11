@@ -1,5 +1,6 @@
 import json
 import logging
+from collections import defaultdict
 from io import StringIO
 from pathlib import Path
 from re import sub
@@ -285,8 +286,17 @@ The two most popular are:
             for rule, rule_matches in rule_matches_by_rule.items()
         }
 
+
+    # TODO: simplify? hardcode types?
+    findings_summary = defaultdict(int)
+    for rule, matches in rule_matches_by_rule.items():
+        findings_summary[rule.severity] += len(matches)
+
     num_findings = sum(len(v) for v in rule_matches_by_rule.values())
+    summary_text = "\n".join(f"{k} : {v}" for k, v in findings_summary.items())
+
     stats_line = f"ran {len(filtered_rules)} rules on {len(all_targets)} files: {num_findings} findings"
+    stats_line += "\n" + summary_text
 
     output_handler.handle_semgrep_core_output(
         rule_matches_by_rule,
